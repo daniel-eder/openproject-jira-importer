@@ -1,0 +1,33 @@
+{
+  "name": "jira-to-openproject-migrator",
+  "version": "1.0.0",
+  "description": "A tool to migrate issues from Jira to OpenProject, including attachments, comments, and relationships",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "generate-mapping": "node generate-user-mapping.js",
+    "migrate-parents": "node migrate-parents.js",
+    "migrate-relationships": "node migrate-relationships.js",
+    "remove-duplicates": "node remove-duplicates.js"
+  },
+  "keywords": [
+    "jira",
+    "openproject",
+    "migration",
+    "issue-tracker",
+    "project-management"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/jira-to-openproject-migrator"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "form-data": "^4.0.1",
+    "inquirer": "^8.2.6"
+  }
+}

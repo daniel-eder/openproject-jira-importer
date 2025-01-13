@@ -1,0 +1,1 @@
+- [ ] improve logging with colors and progress bars
