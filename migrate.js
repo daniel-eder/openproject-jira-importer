@@ -118,7 +118,7 @@ async function promptForMigrationOptions() {
         type: "confirm",
         name: "confirm",
         message: "Would you like to proceed with these settings?",
-        default: false,
+        default: true,
       },
     ]);
 

@@ -24,6 +24,7 @@ const JIRA_ID_CUSTOM_FIELD = 1;
 let workPackageTypes = null;
 let workPackageStatuses = null;
 let openProjectUsers = null;
+let workPackagePriorities = null;
 
 // Map Jira issue types to OpenProject types
 const typeMapping = {
@@ -42,6 +43,15 @@ const statusMapping = {
   Done: "Closed",
   Closed: "Closed",
   Resolved: "Closed",
+};
+
+// Map Jira priorities to OpenProject priorities
+const priorityMapping = {
+  Highest: "Immediate",
+  High: "High",
+  Medium: "Normal",
+  Low: "Low",
+  Lowest: "Low",
 };
 
 async function getOpenProjectWorkPackages(projectId) {
@@ -300,6 +310,21 @@ async function getWorkPackageStatuses() {
   }
 }
 
+async function getWorkPackagePriorities() {
+  try {
+    const response = await openProjectApi.get("/priorities");
+    workPackagePriorities = response.data._embedded.elements;
+    console.log("\nAvailable work package priorities:");
+    workPackagePriorities.forEach((priority) => {
+      console.log(`- ${priority.name} (ID: ${priority.id})`);
+    });
+    return workPackagePriorities;
+  } catch (error) {
+    console.error("Error fetching work package priorities:", error.message);
+    throw error;
+  }
+}
+
 function getWorkPackageTypeId(jiraIssueType) {
   console.log(`Mapping Jira type: ${jiraIssueType}`);
   const mappedType = typeMapping[jiraIssueType] || "Task"; // Default to Task if no mapping found
@@ -334,6 +359,26 @@ function getWorkPackageStatusId(jiraStatus) {
     `Mapped to OpenProject status: ${statusObj.name} (ID: ${statusObj.id})`
   );
   return statusObj.id;
+}
+
+function getWorkPackagePriorityId(jiraPriority) {
+  if (!jiraPriority) return null;
+
+  console.log(`Mapping Jira priority: ${jiraPriority.name}`);
+  const mappedPriority = priorityMapping[jiraPriority.name] || "Normal"; // Default to Normal if no mapping found
+  const priorityObj = workPackagePriorities.find(
+    (p) => p.name.toLowerCase() === mappedPriority.toLowerCase()
+  );
+  if (!priorityObj) {
+    console.warn(
+      `Could not find OpenProject priority for ${jiraPriority.name} (mapped to ${mappedPriority})`
+    );
+    return workPackagePriorities.find((p) => p.isDefault)?.id; // Default to the default priority
+  }
+  console.log(
+    `Mapped to OpenProject priority: ${priorityObj.name} (ID: ${priorityObj.id})`
+  );
+  return priorityObj.id;
 }
 
 async function getExistingAttachments(workPackageId) {
@@ -425,8 +470,10 @@ module.exports = {
   listProjects,
   getWorkPackageTypes,
   getWorkPackageStatuses,
+  getWorkPackagePriorities,
   getWorkPackageTypeId,
   getWorkPackageStatusId,
+  getWorkPackagePriorityId,
   getExistingAttachments,
   getExistingComments,
   getOpenProjectUsers,
@@ -435,5 +482,6 @@ module.exports = {
   getWorkPackageStatusName,
   typeMapping,
   statusMapping,
+  priorityMapping,
   JIRA_ID_CUSTOM_FIELD,
 };

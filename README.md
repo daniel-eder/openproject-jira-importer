@@ -4,7 +4,7 @@ A Node.js script to migrate issues from Jira to OpenProject. This tool helps you
 
 ## Features
 
-- Migrates issue details (summary, description, status, type)
+- Migrates issue details (summary, description, status, type, priority)
 - Transfers attachments and comments
 - Preserves issue relationships
 - Maps users between systems
@@ -52,17 +52,27 @@ This will:
 
 ### 2. Migrate Projects
 
-To migrate all issues from a Jira project:
+To start the migration process:
 
 ```bash
-node index.js
+node migrate.js
 ```
 
-The script will:
-1. List available projects
-2. Let you select the source Jira project
-3. Let you select the target OpenProject project
-4. Start the migration process
+The script will guide you through the following steps:
+1. Select the source Jira project
+2. Select the target OpenProject project
+3. Choose the migration type:
+   - Full migration: Migrates all issues
+   - Test migration: Simulates migration without making changes
+   - Specific issues: Migrate only selected issues
+4. For full migrations, choose how to handle existing issues:
+   - Add new issues only (skip existing)
+   - Add new issues and update existing ones
+
+You can also run the migration with command line arguments:
+```bash
+node migrate.js JIRA_PROJECT_KEY OPENPROJECT_ID [--prod] [--skip-updates] [--specific ISSUE1,ISSUE2]
+```
 
 ### 3. Migrate Parent-Child Relationships
 

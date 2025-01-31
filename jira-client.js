@@ -40,32 +40,72 @@ async function getAllJiraIssues(projectKey, fields = DEFAULT_FIELDS) {
     let startAt = 0;
     const maxResults = 100;
 
+    // Validate project key
+    if (!projectKey) {
+      throw new Error("Project key is required");
+    }
+
+    // Validate project key format
+    if (!/^[A-Z][A-Z0-9_]+$/.test(projectKey)) {
+      throw new Error(
+        "Invalid project key format. Project keys should be uppercase and may contain numbers."
+      );
+    }
+
     while (true) {
       console.log(`Fetching issues ${startAt} to ${startAt + maxResults}...`);
-      const response = await jiraApi.get("/search", {
-        params: {
-          jql: `project = ${projectKey} ORDER BY created DESC`,
-          startAt,
-          maxResults,
-          fields,
-          expand: "renderedFields",
-        },
-      });
+      try {
+        const response = await jiraApi.get("/search", {
+          params: {
+            jql: `project = "${projectKey}" ORDER BY created DESC`,
+            startAt,
+            maxResults,
+            fields,
+            expand: "renderedFields",
+          },
+        });
 
-      const { issues, total } = response.data;
-      allIssues = allIssues.concat(issues);
+        const { issues, total } = response.data;
 
-      if (allIssues.length >= total || issues.length === 0) {
-        console.log(`Retrieved all ${allIssues.length} issues`);
-        break;
+        if (total === 0) {
+          console.warn(
+            `No issues found in project ${projectKey}. Please check:`
+          );
+          console.warn("1. The project key is correct");
+          console.warn("2. The project contains issues");
+          console.warn("3. You have permission to view issues");
+          break;
+        }
+
+        allIssues = allIssues.concat(issues);
+
+        if (allIssues.length >= total || issues.length === 0) {
+          console.log(`Retrieved all ${allIssues.length} issues`);
+          break;
+        }
+
+        startAt += maxResults;
+      } catch (error) {
+        if (error.response?.status === 400) {
+          console.error(`\nError fetching issues for project ${projectKey}:`);
+          console.error("1. Verify the project key exists");
+          console.error("2. Check you have access to the project");
+          console.error("3. Ensure the project key is in the correct format");
+          if (error.response.data) {
+            console.error("\nJira API Error Details:", error.response.data);
+          }
+        }
+        throw error;
       }
-
-      startAt += maxResults;
     }
 
     return allIssues;
   } catch (error) {
-    console.error("Error fetching Jira issues:", error.message);
+    console.error("Error fetching Jira issues:");
+    if (error.response) {
+      console.error(`Status code: ${error.response.status}`);
+      console.error("Response data:", error.response.data);
+    }
     throw error;
   }
 }
@@ -79,7 +119,7 @@ async function getSpecificJiraIssues(
     console.log(`Fetching specific issues: ${issueKeys.join(", ")}...`);
     const response = await jiraApi.get("/search", {
       params: {
-        jql: `key in (${issueKeys.join(",")})`,
+        jql: `key in ("${issueKeys.join('","')}")`,
         maxResults: issueKeys.length,
         fields,
         expand: "renderedFields",
@@ -126,9 +166,51 @@ async function downloadAttachment(url, filePath) {
 async function listProjects() {
   try {
     const response = await jiraApi.get("/project");
+    if (!response.data || response.data.length === 0) {
+      console.error(
+        "No projects found in Jira. Please check your permissions."
+      );
+      console.error(
+        "Make sure your Jira API token has access to view projects."
+      );
+      throw new Error("No projects found");
+    }
     return response.data;
   } catch (error) {
-    console.error("Error fetching Jira projects:", error.message);
+    console.error("Error fetching Jira projects:");
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error(`Status code: ${error.response.status}`);
+      console.error("Response data:", error.response.data);
+      console.error("Response headers:", error.response.headers);
+
+      if (error.response.status === 401) {
+        console.error("\nAuthentication failed. Please check:");
+        console.error("1. Your JIRA_EMAIL is correct");
+        console.error("2. Your JIRA_API_TOKEN is valid and not expired");
+        console.error("3. Your JIRA_HOST is correct");
+      } else if (error.response.status === 403) {
+        console.error("\nPermission denied. Please check:");
+        console.error("1. Your API token has sufficient permissions");
+        console.error("2. You have access to the Jira instance");
+      } else if (error.response.status === 400) {
+        console.error("\nInvalid request. Please check:");
+        console.error(
+          "1. Your JIRA_HOST is in the correct format (e.g., your-domain.atlassian.net)"
+        );
+        console.error("2. The project key is valid");
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error("No response received from Jira. Please check:");
+      console.error("1. Your internet connection");
+      console.error("2. The Jira host is accessible");
+      console.error("3. JIRA_HOST is correct in your .env file");
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error("Error setting up the request:", error.message);
+    }
     throw error;
   }
 }

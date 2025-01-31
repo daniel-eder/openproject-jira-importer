@@ -24,6 +24,8 @@ const {
   getOpenProjectUsers,
   findExistingWorkPackage,
   JIRA_ID_CUSTOM_FIELD,
+  getWorkPackagePriorityId,
+  getWorkPackagePriorities,
 } = require("./openproject-client");
 
 // Create temp directory for attachments if it doesn't exist
@@ -92,6 +94,7 @@ async function migrateIssues(
   // Get work package types and statuses
   await getWorkPackageTypes();
   await getWorkPackageStatuses();
+  await getWorkPackagePriorities();
   await getOpenProjectUsers();
 
   // Cache OpenProject work packages if skipUpdates is enabled
@@ -167,6 +170,11 @@ async function migrateIssues(
           status: {
             href: `/api/v3/statuses/${getWorkPackageStatusId(
               issue.fields.status.name
+            )}`,
+          },
+          priority: {
+            href: `/api/v3/priorities/${getWorkPackagePriorityId(
+              issue.fields.priority
             )}`,
           },
           project: {
