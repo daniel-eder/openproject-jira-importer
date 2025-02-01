@@ -1,102 +1,90 @@
-# Jira to OpenProject Issue Migrator
+# OpenProject Jira Migration Tool
 
-A Node.js script to migrate issues from Jira to OpenProject. This tool helps you seamlessly transfer your issues, including attachments, comments, and relationships.
+A tool to migrate issues from Jira to OpenProject, including attachments, comments, relationships, and priorities.
 
 ## Features
 
-- Migrates issue details (summary, description, status, type, priority)
-- Transfers attachments and comments
-- Preserves issue relationships
-- Maps users between systems
-- Supports selective migration of specific issues
-- Handles incremental updates
+- Migrates issues with their descriptions, priorities, and statuses
+- Preserves issue relationships and hierarchies
+- Migrates attachments and comments
+- Migrates watchers
+- Maps Jira users to OpenProject users
+- Tracks original Jira issue IDs
+- Handles incremental migrations
 
 ## Prerequisites
 
-- Node.js (v14 or higher) installed on your system
-- Jira account with API token
-- OpenProject instance with API access
+1. Node.js installed
+2. Access to both Jira and OpenProject instances
+3. API tokens/keys for both systems
+4. Custom field in OpenProject to store Jira issue IDs
 
 ## Setup
 
 1. Clone this repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-4. Configure your `.env` file with:
-   - `JIRA_HOST`: Your Jira instance hostname (e.g., your-domain.atlassian.net)
-   - `JIRA_EMAIL`: Your Jira account email
-   - `JIRA_API_TOKEN`: Your Jira API token (generate from Atlassian account settings)
-   - `OPENPROJECT_HOST`: Your OpenProject instance URL
-   - `OPENPROJECT_API_KEY`: Your OpenProject API key (generate from OpenProject admin settings)
+2. Run `npm install` to install dependencies
+3. Copy `.env.example` to `.env`
+4. Configure your environment variables in `.env`
+
+### Environment Variables
+
+#### Jira Configuration
+- `JIRA_HOST`: Your Jira instance hostname (e.g., your-domain.atlassian.net)
+- `JIRA_EMAIL`: Your Jira email address
+- `JIRA_API_TOKEN`: Your Jira API token (generate at https://id.atlassian.com/manage-profile/security/api-tokens)
+
+#### OpenProject Configuration
+- `OPENPROJECT_HOST`: Your OpenProject instance URL
+- `OPENPROJECT_API_KEY`: Your OpenProject API key (generate in Settings > My account > Access token)
+
+#### Custom Field Configuration
+- `JIRA_ID_CUSTOM_FIELD`: The ID of the custom field in OpenProject that stores the Jira issue ID
+  - This must be a text custom field
+  - Find the ID in OpenProject: Administration > Custom fields > Work packages
+  - Default value is 1 if not specified
+
+### OpenProject Custom Field Setup
+
+1. In OpenProject, go to Administration > Custom fields > Work packages
+2. Create a new text custom field (if not already exists)
+3. Note the ID of the custom field
+4. Set this ID in your `.env` file as `JIRA_ID_CUSTOM_FIELD`
 
 ## Usage
 
-### 1. Generate User Mapping
-
-First, generate a mapping between Jira and OpenProject users:
-
-```bash
-node generate-user-mapping.js
-```
-
-This will:
-1. Fetch users from both systems
-2. Help you map users between systems
-3. Save the mapping to `user-mapping.js`
-
-### 2. Migrate Projects
-
-To start the migration process:
+Run the migration tool:
 
 ```bash
 node migrate.js
 ```
 
-The script will guide you through the following steps:
-1. Select the source Jira project
-2. Select the target OpenProject project
-3. Choose the migration type:
-   - Full migration: Migrates all issues
-   - Test migration: Simulates migration without making changes
-   - Specific issues: Migrate only selected issues
-4. For full migrations, choose how to handle existing issues:
-   - Add new issues only (skip existing)
-   - Add new issues and update existing ones
+Follow the interactive prompts to:
+1. Select source Jira project
+2. Select target OpenProject project
+3. Choose migration type (full or specific issues)
+4. Confirm existing issue handling
 
-You can also run the migration with command line arguments:
-```bash
-node migrate.js JIRA_PROJECT_KEY OPENPROJECT_ID [--prod] [--skip-updates] [--specific ISSUE1,ISSUE2]
-```
-
-### 3. Migrate Parent-Child Relationships
-
-After migrating issues, set up parent-child relationships:
+For non-interactive usage or specific issues:
 
 ```bash
-node migrate-parents.js
+# Migrate specific issues
+node migrate.js JIRA_PROJECT_KEY OPENPROJECT_ID ISSUE1,ISSUE2
+
+# Migrate relationships only
+node migrate-relationships.js JIRA_PROJECT_KEY OPENPROJECT_ID
+
+# Remove duplicate work packages
+node remove-duplicates.js OPENPROJECT_ID
 ```
 
-### 4. Migrate Issue Relationships
+## Troubleshooting
 
-Finally, migrate issue relationships (blocks, relates to, etc.):
+If you encounter issues:
 
-```bash
-node migrate-relationships.js
-```
-
-### 5. Clean Up Duplicates (Optional)
-
-If you need to clean up any duplicate issues:
-
-```bash
-node remove-duplicates.js
-```
+1. Check your API tokens and permissions
+2. Verify the custom field ID is correct
+3. Ensure users are properly mapped
+4. Check the console output for detailed error messages
 
 ## About
 
