@@ -17,8 +17,8 @@ const openProjectConfig = {
 
 const openProjectApi = axios.create(openProjectConfig);
 
-// Known custom field ID for JIRA ID
-const JIRA_ID_CUSTOM_FIELD = 1;
+// Get the custom field ID from environment variable or use default value
+const JIRA_ID_CUSTOM_FIELD = process.env.JIRA_ID_CUSTOM_FIELD || 1;
 
 // Store work package types and statuses
 let workPackageTypes = null;
@@ -266,6 +266,47 @@ async function uploadAttachment(workPackageId, filePath, fileName, mimeType) {
   }
 }
 
+async function addWatcher(workPackageId, userId) {
+  try {
+    console.log(
+      `Adding watcher (userId: ${userId}) to work package ${workPackageId}...`
+    );
+    await openProjectApi.post(`/work_packages/${workPackageId}/watchers`, {
+      user: { href: `/api/v3/users/${userId}` },
+    });
+    console.log(
+      `Successfully added watcher ${userId} to work package ${workPackageId}`
+    );
+  } catch (error) {
+    // Ignore if watcher already exists (409 Conflict)
+    if (error.response?.status === 409) {
+      console.log(
+        `Watcher ${userId} is already watching work package ${workPackageId}`
+      );
+    } else {
+      console.error(
+        `Error adding watcher ${userId} to work package ${workPackageId}:`,
+        error.message
+      );
+      if (error.response?.data) {
+        console.error(
+          "Error details:",
+          JSON.stringify(error.response.data, null, 2)
+        );
+      }
+      if (error.response?.status === 404) {
+        console.error(
+          "This could mean either the work package or user doesn't exist"
+        );
+      } else if (error.response?.status === 403) {
+        console.error(
+          "This could mean insufficient permissions to add watchers"
+        );
+      }
+    }
+  }
+}
+
 async function listProjects() {
   try {
     const response = await openProjectApi.get("/projects");
@@ -467,6 +508,7 @@ module.exports = {
   updateWorkPackage,
   addComment,
   uploadAttachment,
+  addWatcher,
   listProjects,
   getWorkPackageTypes,
   getWorkPackageStatuses,

@@ -30,8 +30,10 @@ const DEFAULT_FIELDS = [
   "comment",
   "issuelinks",
   "assignee",
+  "creator",
   "customfield_10014", // Epic Link field
   "parent",
+  "watches",
 ].join(",");
 
 async function getAllJiraIssues(projectKey, fields = DEFAULT_FIELDS) {
@@ -215,11 +217,41 @@ async function listProjects() {
   }
 }
 
+async function getIssueWatchers(issueKey) {
+  try {
+    console.log(`Fetching watchers for Jira issue ${issueKey}...`);
+    const response = await jiraApi.get(`/issue/${issueKey}/watchers`);
+    console.log(
+      `Found ${response.data.watchers?.length || 0} watchers for ${issueKey}`
+    );
+    if (response.data.watchers?.length > 0) {
+      console.log(
+        "Watchers:",
+        response.data.watchers.map((w) => w.displayName).join(", ")
+      );
+    }
+    return response.data;
+  } catch (error) {
+    console.error(
+      `Error getting watchers for issue ${issueKey}:`,
+      error.message
+    );
+    if (error.response?.data) {
+      console.error(
+        "Error details:",
+        JSON.stringify(error.response.data, null, 2)
+      );
+    }
+    throw error;
+  }
+}
+
 module.exports = {
   getAllJiraIssues,
   getSpecificJiraIssues,
   getJiraUserEmail,
   downloadAttachment,
   listProjects,
+  getIssueWatchers,
   DEFAULT_FIELDS,
 };

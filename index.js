@@ -6,6 +6,8 @@ const {
   getAllJiraIssues,
   getSpecificJiraIssues,
   downloadAttachment,
+  listProjects,
+  getIssueWatchers,
 } = require("./jira-client");
 const { generateMapping } = require("./generate-user-mapping");
 const {
@@ -14,7 +16,6 @@ const {
   updateWorkPackage,
   addComment,
   uploadAttachment,
-  listProjects,
   getWorkPackageTypes,
   getWorkPackageStatuses,
   getWorkPackageTypeId,
@@ -26,6 +27,7 @@ const {
   JIRA_ID_CUSTOM_FIELD,
   getWorkPackagePriorityId,
   getWorkPackagePriorities,
+  addWatcher,
 } = require("./openproject-client");
 
 // Create temp directory for attachments if it doesn't exist
@@ -250,6 +252,18 @@ async function migrateIssues(
 
             console.log("Adding comment");
             await addComment(workPackage.id, formattedComment);
+          }
+        }
+      }
+
+      // Add watchers if any
+      if (issue.fields.watches?.watchCount > 0) {
+        console.log("Adding watchers");
+        const watchers = await getIssueWatchers(issue.key);
+        for (const watcher of watchers.watchers) {
+          const watcherId = await getOpenProjectUserId(watcher);
+          if (watcherId) {
+            await addWatcher(workPackage.id, watcherId);
           }
         }
       }
