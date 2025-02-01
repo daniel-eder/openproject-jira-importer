@@ -2,6 +2,7 @@ require("dotenv").config();
 const axios = require("axios");
 const { createRelationships } = require("./create-relationships");
 const { getAllJiraIssues, getSpecificJiraIssues } = require("./jira-client");
+const { JIRA_ID_CUSTOM_FIELD } = require("./openproject-client");
 
 // OpenProject API configuration
 const openProjectConfig = {
@@ -15,9 +16,6 @@ const openProjectConfig = {
 };
 
 const openProjectApi = axios.create(openProjectConfig);
-
-// Known custom field ID for JIRA ID
-const JIRA_ID_CUSTOM_FIELD = 1;
 
 async function getOpenProjectWorkPackages(projectId) {
   try {
