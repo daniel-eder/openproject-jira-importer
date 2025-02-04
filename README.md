@@ -86,6 +86,17 @@ If you encounter issues:
 3. Ensure users are properly mapped
 4. Check the console output for detailed error messages
 
+## Need Professional Help?
+
+Don't want to handle the migration yourself? We offer a complete done-for-you service that includes:
+
+- Managed OpenProject hosting
+- Complete Jira migration
+- 24/7 technical support
+- Secure and reliable infrastructure
+
+Visit [portfolio.elitecoders.co/openproject](https://portfolio.elitecoders.co/openproject) to learn more about our managed OpenProject migration service.
+
 ## About
 
 This project was built by [EliteCoders](https://www.elitecoders.co), a software development company specializing in custom software solutions. If you need help with:
