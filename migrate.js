@@ -100,6 +100,16 @@ async function promptForMigrationOptions() {
       isProd = true;
     }
 
+    // Prompt for responsible mapping
+    const { mapResponsible } = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "mapResponsible",
+        message: "Map Jira creator to OpenProject accountable?",
+        default: true,
+      },
+    ]);
+
     // Confirm migration settings
     console.log("\nMigration Settings:");
     console.log(`- Jira Project: ${jiraProject}`);
@@ -112,6 +122,7 @@ async function promptForMigrationOptions() {
     } else if (migrationType === "specific") {
       console.log(`- Specific Issues: ${specificIssues.join(", ")}`);
     }
+    console.log(`- Map Responsible: ${mapResponsible ? "Yes" : "No"}`);
 
     const { confirm } = await inquirer.prompt([
       {
@@ -134,7 +145,8 @@ async function promptForMigrationOptions() {
       openProjectId,
       isProd,
       specificIssues,
-      skipUpdates
+      skipUpdates,
+      mapResponsible
     );
   } catch (error) {
     console.error("Error during migration setup:", error.message);
@@ -151,12 +163,13 @@ if (args.length > 0) {
   const specificIndex = args.indexOf("--specific");
   const specificIssues =
     specificIndex !== -1 ? args[specificIndex + 1].split(",") : null;
+  const mapResponsible = !args.includes("--no-responsible"); // Default to true unless --no-responsible is specified
   const jiraProject = args[0];
   const openProjectId = parseInt(args[1]);
 
   if (!jiraProject || !openProjectId) {
     console.log(
-      "Usage: node migrate.js JIRA_PROJECT_KEY OPENPROJECT_ID [--prod] [--skip-updates] [--specific ISSUE1,ISSUE2]"
+      "Usage: node migrate.js JIRA_PROJECT_KEY OPENPROJECT_ID [--prod] [--skip-updates] [--specific ISSUE1,ISSUE2] [--no-responsible]"
     );
     process.exit(1);
   }
@@ -168,7 +181,8 @@ if (args.length > 0) {
       openProjectId,
       isProd,
       specificIssues,
-      skipUpdates
+      skipUpdates,
+      mapResponsible
     );
   }, 2000);
 } else {

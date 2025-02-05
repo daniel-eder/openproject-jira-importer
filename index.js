@@ -63,12 +63,17 @@ async function migrateIssues(
   openProjectId,
   isProd,
   specificIssues,
-  skipUpdates
+  skipUpdates,
+  mapResponsible
 ) {
   console.log(
     `Starting migration for project ${jiraProjectKey} to OpenProject project ${openProjectId}`
   );
   console.log("Production mode:", isProd ? "yes" : "no");
+  console.log(
+    "Map Jira creator to OpenProject accountable:",
+    mapResponsible ? "yes" : "no"
+  );
 
   // Generate or load user mapping
   console.log("\nChecking user mapping...");
@@ -150,8 +155,12 @@ async function migrateIssues(
 
       // Get assignee ID from mapping
       let assigneeId = null;
+      let responsibleId = null;
       if (issue.fields.assignee) {
         assigneeId = await getOpenProjectUserId(issue.fields.assignee);
+      }
+      if (mapResponsible && issue.fields.creator) {
+        responsibleId = await getOpenProjectUserId(issue.fields.creator);
       }
 
       // Create work package payload
@@ -190,6 +199,13 @@ async function migrateIssues(
       if (assigneeId) {
         payload._links.assignee = {
           href: `/api/v3/users/${assigneeId}`,
+        };
+      }
+
+      // Add responsible (accountable) if available
+      if (responsibleId) {
+        payload._links.responsible = {
+          href: `/api/v3/users/${responsibleId}`,
         };
       }
 
