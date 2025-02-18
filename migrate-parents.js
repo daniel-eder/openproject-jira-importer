@@ -4,6 +4,7 @@ const {
   getOpenProjectWorkPackages,
   setParentWorkPackage,
   listProjects,
+  JIRA_ID_CUSTOM_FIELD,
 } = require("./openproject-client");
 
 async function migrateParents(jiraProjectKey, openProjectId, specificIssues) {
@@ -19,7 +20,7 @@ async function migrateParents(jiraProjectKey, openProjectId, specificIssues) {
   // Create a map of Jira keys to work package IDs
   const jiraKeyToWorkPackageId = new Map();
   workPackages.forEach((wp) => {
-    const jiraKey = wp.customField1;
+    const jiraKey = wp[`customField${JIRA_ID_CUSTOM_FIELD}`];
     if (jiraKey) {
       jiraKeyToWorkPackageId.set(jiraKey, wp.id);
     }

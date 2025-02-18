@@ -111,7 +111,7 @@ async function getOpenProjectWorkPackages(projectId) {
 
       // Map work packages by their Jira ID
       for (const wp of workPackages) {
-        const jiraId = wp.customField1;
+        const jiraId = wp[`customField${JIRA_ID_CUSTOM_FIELD}`];
         if (jiraId) {
           workPackageMap.set(jiraId, wp);
         }
