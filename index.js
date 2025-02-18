@@ -123,6 +123,14 @@ async function migrateIssues(
 
   console.log(`Found ${jiraIssues.length} Jira issues to process`);
 
+  // Sort issues by creation date (oldest first)
+  console.log("Sorting issues by creation date (oldest first)...");
+  jiraIssues.sort((a, b) => {
+    const dateA = new Date(a.fields.created);
+    const dateB = new Date(b.fields.created);
+    return dateA - dateB;
+  });
+
   // Process each issue
   let processed = 0;
   let skipped = 0;
