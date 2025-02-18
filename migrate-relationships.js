@@ -1,8 +1,9 @@
 require("dotenv").config();
-const axios = require("axios");
 const { createRelationships } = require("./create-relationships");
 const { getAllJiraIssues, getSpecificJiraIssues } = require("./jira-client");
-const { JIRA_ID_CUSTOM_FIELD } = require("./openproject-client");
+const {
+  getOpenProjectWorkPackages: getOpenProjectWorkPackagesFromClient,
+} = require("./openproject-client");
 
 // OpenProject API configuration
 const openProjectConfig = {
@@ -15,34 +16,18 @@ const openProjectConfig = {
   },
 };
 
-const openProjectApi = axios.create(openProjectConfig);
-
 async function getOpenProjectWorkPackages(projectId) {
   try {
     console.log(`Fetching work packages for project ${projectId}...`);
-    const response = await openProjectApi.get("/work_packages", {
-      params: {
-        filters: JSON.stringify([
-          {
-            project: {
-              operator: "=",
-              values: [projectId.toString()],
-            },
-          },
-        ]),
-        pageSize: 1000,
-      },
-    });
+    const workPackagesMap = await getOpenProjectWorkPackagesFromClient(
+      projectId
+    );
 
-    const workPackages = response.data._embedded.elements;
+    // Convert Map to simple object format
     const mapping = {};
-
-    workPackages.forEach((wp) => {
-      const jiraId = wp[`customField${JIRA_ID_CUSTOM_FIELD}`];
-      if (jiraId) {
-        mapping[jiraId] = wp.id;
-      }
-    });
+    for (const [jiraId, wp] of workPackagesMap.entries()) {
+      mapping[jiraId] = wp.id;
+    }
 
     return mapping;
   } catch (error) {
