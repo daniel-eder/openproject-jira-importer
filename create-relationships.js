@@ -25,25 +25,49 @@ async function checkExistingRelationship(fromId, toId, type) {
     console.log(
       `\nChecking for existing relationship: ${fromId} ${type} ${toId}`
     );
+
+    // For bidirectional relationships like "relates", we need to check both directions
+    const filters = [];
+
+    // Check forward direction (fromId -> toId)
+    filters.push({
+      from: {
+        operator: "=",
+        values: [fromId.toString()],
+      },
+      to: {
+        operator: "=",
+        values: [toId.toString()],
+      },
+      type: {
+        operator: "=",
+        values: [type],
+      },
+    });
+
+    // For "relates" type, also check reverse direction (toId -> fromId)
+    if (type === "relates") {
+      filters.push({
+        from: {
+          operator: "=",
+          values: [toId.toString()],
+        },
+        to: {
+          operator: "=",
+          values: [fromId.toString()],
+        },
+        type: {
+          operator: "=",
+          values: [type],
+        },
+      });
+    }
+
     // Use the relations endpoint with filters
     const response = await openProjectApi.get("/relations", {
       params: {
-        filters: JSON.stringify([
-          {
-            from: {
-              operator: "=",
-              values: [fromId.toString()],
-            },
-            to: {
-              operator: "=",
-              values: [toId.toString()],
-            },
-            type: {
-              operator: "=",
-              values: [type],
-            },
-          },
-        ]),
+        filters: JSON.stringify(filters),
+        operator: "or",
       },
     });
 
@@ -55,6 +79,31 @@ async function checkExistingRelationship(fromId, toId, type) {
     console.log(
       `Relationship exists: ${exists} (found ${response.data.total} matches)`
     );
+
+    // Add detailed logging about any found relationships
+    if (exists && response.data._embedded.elements.length > 0) {
+      const relation = response.data._embedded.elements[0];
+      console.log("\nFound existing relationship details:");
+      console.log(`- Relation ID: ${relation.id}`);
+      console.log(`- Type: ${relation.type}`);
+      console.log(
+        `- From: ${relation._links.from.title} (ID: ${relation._links.from.href
+          .split("/")
+          .pop()})`
+      );
+      console.log(
+        `- To: ${relation._links.to.title} (ID: ${relation._links.to.href
+          .split("/")
+          .pop()})`
+      );
+      console.log(
+        `- Direction: ${
+          relation._links.from.href.split("/").pop() === fromId
+            ? "forward"
+            : "reverse"
+        }`
+      );
+    }
 
     return exists;
   } catch (error) {
