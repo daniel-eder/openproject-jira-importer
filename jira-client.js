@@ -31,6 +31,7 @@ const DEFAULT_FIELDS = [
   "issuelinks",
   "assignee",
   "creator",
+  "created",
   "customfield_10014", // Epic Link field
   "parent",
   "watches",
@@ -59,7 +60,7 @@ async function getAllJiraIssues(projectKey, fields = DEFAULT_FIELDS) {
       try {
         const response = await jiraApi.get("/search", {
           params: {
-            jql: `project = "${projectKey}" ORDER BY created DESC`,
+            jql: `project = "${projectKey}" ORDER BY created ASC`,
             startAt,
             maxResults,
             fields,
