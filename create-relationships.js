@@ -22,6 +22,9 @@ const missingRelationships = new Set();
 
 async function checkExistingRelationship(fromId, toId, type) {
   try {
+    console.log(
+      `\nChecking for existing relationship: ${fromId} ${type} ${toId}`
+    );
     // Use the relations endpoint with filters
     const response = await openProjectApi.get("/relations", {
       params: {
@@ -44,8 +47,16 @@ async function checkExistingRelationship(fromId, toId, type) {
       },
     });
 
+    // Log the API response for debugging
+    console.log("API Response:", JSON.stringify(response.data, null, 2));
+
     // If we find any relations matching our criteria, a relationship exists
-    return response.data.total > 0;
+    const exists = response.data.total > 0;
+    console.log(
+      `Relationship exists: ${exists} (found ${response.data.total} matches)`
+    );
+
+    return exists;
   } catch (error) {
     console.error(`Error checking existing relationship: ${error.message}`);
     if (error.response?.data) {
@@ -60,6 +71,10 @@ async function checkExistingRelationship(fromId, toId, type) {
 
 async function createRelationship(fromId, toId, type) {
   try {
+    console.log(
+      `\nAttempting to create relationship: ${fromId} ${type} ${toId}`
+    );
+
     // Check if relationship already exists
     const exists = await checkExistingRelationship(fromId, toId, type);
     if (exists) {
@@ -81,8 +96,17 @@ async function createRelationship(fromId, toId, type) {
       },
     };
 
+    console.log(
+      "Creating relationship with payload:",
+      JSON.stringify(payload, null, 2)
+    );
+
     // The correct endpoint is /api/v3/work_packages/{id}/relations
-    await openProjectApi.post(`/work_packages/${fromId}/relations`, payload);
+    const response = await openProjectApi.post(
+      `/work_packages/${fromId}/relations`,
+      payload
+    );
+    console.log("Creation response:", JSON.stringify(response.data, null, 2));
     console.log(`Created ${type} relationship: ${fromId} -> ${toId}`);
   } catch (error) {
     console.error(
