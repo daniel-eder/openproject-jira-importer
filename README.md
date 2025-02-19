@@ -73,9 +73,40 @@ node migrate.js JIRA_PROJECT_KEY OPENPROJECT_ID ISSUE1,ISSUE2
 # Migrate relationships only
 node migrate-relationships.js JIRA_PROJECT_KEY OPENPROJECT_ID
 
+# Migrate parent-child hierarchies only
+node migrate-parents.js JIRA_PROJECT_KEY OPENPROJECT_ID [ISSUE1,ISSUE2]
+```
+
+The `migrate-parents.js` script specifically handles parent-child hierarchies from Jira to OpenProject. While `migrate-relationships.js` handles all types of relationships (blocks, relates, etc.), this script focuses only on the hierarchical structure.
+
+Key features:
+- Migrates Jira's parent-child relationships to OpenProject's hierarchical structure
+- Can process specific issues or entire project
+- Preserves existing work package data
+- Shows detailed progress and results
+
+Use this when:
+- You need to fix hierarchy issues
+- You want to migrate parent-child relationships separately
+- You're troubleshooting hierarchy-specific problems
+
+Note: Run this script before `migrate-relationships.js` as OpenProject doesn't allow both parent-child hierarchies and "partof"/"includes" relationships between the same work packages.
+
+```bash
 # Remove duplicate work packages
 node remove-duplicates.js OPENPROJECT_ID
+
+# Delete all relationships
+node delete-relationships.js OPENPROJECT_ID
 ```
+
+This will delete all relationships (including parent-child hierarchies) between work packages in the specified project. 
+Useful for:
+- Testing relationship migration
+- Cleaning up before re-running relationship migration
+- Removing problematic relationships
+
+The script preserves all work packages and their data, only removing the relationships between them.
 
 ## Troubleshooting
 
