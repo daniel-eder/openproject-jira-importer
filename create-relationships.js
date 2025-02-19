@@ -20,11 +20,55 @@ const issueToWorkPackageMap = new Map();
 // Track missing relationships to retry later
 const missingRelationships = new Set();
 
+async function checkParentRelationship(fromId, toId, type) {
+  try {
+    // For "partof", check if toId is parent of fromId
+    // For "includes", check if fromId is parent of toId
+    const workPackageToCheck = type === "partof" ? fromId : toId;
+    const expectedParentId = type === "partof" ? toId : fromId;
+
+    const response = await openProjectApi.get(
+      `/work_packages/${workPackageToCheck}`
+    );
+    const parentLink = response.data._links.parent;
+
+    if (parentLink && parentLink.href) {
+      const parentId = parentLink.href.split("/").pop();
+      const hasParent = parentId === expectedParentId.toString();
+      if (hasParent) {
+        console.log(
+          `Found existing parent relationship between ${fromId} and ${toId}`
+        );
+      }
+      return hasParent;
+    }
+    return false;
+  } catch (error) {
+    console.error(`Error checking parent relationship: ${error.message}`);
+    return false;
+  }
+}
+
 async function checkExistingRelationship(fromId, toId, type) {
   try {
     console.log(
       `\nChecking for existing relationship: ${fromId} ${type} ${toId}`
     );
+
+    // Check for parent relationship first if type is partof or includes
+    if (type === "partof" || type === "includes") {
+      const hasParentRelation = await checkParentRelationship(
+        fromId,
+        toId,
+        type
+      );
+      if (hasParentRelation) {
+        console.log(
+          `Found existing parent relationship, skipping ${type} creation`
+        );
+        return true;
+      }
+    }
 
     // For bidirectional relationships like "relates", we need to check both directions
     const filters = [];
