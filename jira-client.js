@@ -58,7 +58,7 @@ async function getAllJiraIssues(projectKey, fields = DEFAULT_FIELDS) {
     while (true) {
       console.log(`Fetching issues ${startAt} to ${startAt + maxResults}...`);
       try {
-        const response = await jiraApi.get("/search", {
+  const response = await jiraApi.get("/search/jql", {
           params: {
             jql: `project = "${projectKey}" ORDER BY created ASC`,
             startAt,
@@ -120,7 +120,7 @@ async function getSpecificJiraIssues(
 ) {
   try {
     console.log(`Fetching specific issues: ${issueKeys.join(", ")}...`);
-    const response = await jiraApi.get("/search", {
+  const response = await jiraApi.get("/search/jql", {
       params: {
         jql: `key in ("${issueKeys.join('","')}")`,
         maxResults: issueKeys.length,
